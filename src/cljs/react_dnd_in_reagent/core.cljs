@@ -1,6 +1,6 @@
 (ns react-dnd-in-reagent.core
   (:require
-   [reagent.core :as reagent :refer [atom]]
+   [reagent.core :as r :refer [atom]]
    [reagent.dom :as rdom]
    [reagent.session :as session]
    [reitit.frontend :as reitit]
@@ -28,11 +28,16 @@
 ;; -------------------------
 ;; Page components
 
-(defn home-page []
-  (fn []
+(defn page []
+  (r/with-let []
     [:div
      [:div "Welcome to react-dnd-in-reagent"]
-     ]))
+     [:> DndProvider {:backend react-html5-backend/HTML5Backend}
+      [:div {} "foo"]]]))
+
+(defn home-page []
+  (fn []
+    [page]))
 
 ;; -------------------------
 ;; Translate routes -> page components
@@ -63,7 +68,7 @@
       (let [match (reitit/match-by-path router path)
             current-page (:name (:data  match))
             route-params (:path-params match)]
-        (reagent/after-render clerk/after-render!)
+        (r/after-render clerk/after-render!)
         (session/put! :route {:current-page (page-for current-page)
                               :route-params route-params})
         (clerk/navigate-page! path)
