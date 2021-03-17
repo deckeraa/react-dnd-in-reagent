@@ -52,11 +52,21 @@
                                                             :can-drop? can-drop?}))}))]
        (r/as-element (reagent-child-fn ref dnd-props))))])
 
+(defn block [id]
+  [:div {:style {:border "1px solid" :height "50px" :margin "5px" :position :relative}}
+   [droppable-wrapper (fn [] true) (fn [] (println "drop onto: " id))
+    (fn [ref dnd-props]
+      [:div {:ref ref :style {:width "100%" :height "100%" :position :absolute :background-color "yellow"}}])]
+   [draggable-wrapper {}
+    (fn [ref preview-ref dnd-props]
+      [:div {:ref ref :style {:z-index 100 :padding "4px" :background-color "grey" :position :relative}} "id: " id])]])
+
 (defn page []
   (r/with-let []
     [:div
      [:div "Welcome to react-dnd-in-reagent"]
      [:> DndProvider {:backend react-html5-backend/HTML5Backend}
+      [block 14]
       [droppable-wrapper (fn [] true) (fn [] (println "drop"))
        (fn [ref dnd-props]
          [:div {:ref ref :style {:border "1px solid"}} "foo"])]
