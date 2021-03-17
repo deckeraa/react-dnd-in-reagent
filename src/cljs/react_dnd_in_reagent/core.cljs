@@ -5,7 +5,9 @@
    [reagent.session :as session]
    [reitit.frontend :as reitit]
    [clerk.core :as clerk]
-   [accountant.core :as accountant]))
+   [accountant.core :as accountant]
+   ["react-dnd" :as react-dnd :refer [DndProvider useDrag useDrop useDragLayer]]
+   ["react-dnd-html5-backend" :as react-html5-backend]))
 
 ;; -------------------------
 ;; Routes
@@ -28,8 +30,8 @@
 
 (defn home-page []
   (fn []
-    [:span.main
-     [:h1 "Welcome to react-dnd-in-reagent"]
+    [:div
+     [:div "Welcome to react-dnd-in-reagent"]
      ]))
 
 ;; -------------------------

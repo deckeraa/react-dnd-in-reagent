@@ -21,7 +21,7 @@
 (defn loading-page []
   (html5
    (head)
-   [:body {:class "body-container"}
+   [:body {:class ""}
     mount-target
     (include-js "/js/app.js")
     [:script "react_dnd_in_reagent.core.init_BANG_()"]]))
