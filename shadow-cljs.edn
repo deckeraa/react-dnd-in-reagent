@@ -1,0 +1,8 @@
+{:lein         true
+ :builds       {:app {:target     :browser
+                      :output-dir "resources/public/js"
+                      :asset-path "/js"
+                      :modules    {:app {:entries [react-dnd-in-reagent.core]}}
+                      :devtools   {:after-load react-dnd-in-reagent.core/mount-root}}}
+ :dev-http     {3000 {:root    "resources/public"
+                      :handler react-dnd-in-reagent.handler/app}}}
