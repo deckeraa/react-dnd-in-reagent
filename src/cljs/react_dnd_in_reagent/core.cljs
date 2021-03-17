@@ -28,12 +28,41 @@
 ;; -------------------------
 ;; Page components
 
+(defn draggable-wrapper [item reagent-child-fn]
+  [:>
+   (fn []
+     (let [[dnd-props ref preview-ref] (useDrag (clj->js {:type :block
+                                                          :item item
+                                                          :collect (fn [monitor]
+                                                                     (let [is-dragging? (.isDragging ^js monitor)]
+                                                                       {:is-dragging? is-dragging?}))}))]
+       (r/as-element
+        (reagent-child-fn ref preview-ref dnd-props))))])
+
+(defn droppable-wrapper [can-drop-fn drop-fn reagent-child-fn]
+  [:> 
+   (fn []
+     (let [[dnd-props ref] (useDrop (clj->js {:accept :block
+                                              :drop drop-fn
+                                              :canDrop can-drop-fn
+                                              :collect (fn [monitor]
+                                                         (let [is-over? (.isOver ^js monitor)
+                                                               can-drop? (.canDrop ^js monitor)]
+                                                           {:is-over? is-over?
+                                                            :can-drop? can-drop?}))}))]
+       (r/as-element (reagent-child-fn ref dnd-props))))])
+
 (defn page []
   (r/with-let []
     [:div
      [:div "Welcome to react-dnd-in-reagent"]
      [:> DndProvider {:backend react-html5-backend/HTML5Backend}
-      [:div {} "foo"]]]))
+      [droppable-wrapper (fn [] true) (fn [] (println "drop"))
+       (fn [ref dnd-props]
+         [:div {:ref ref :style {:border "1px solid"}} "foo"])]
+      [draggable-wrapper {}
+       (fn [ref preview-ref dnd-props]
+         [:div {:ref ref :style {:padding "4px"}} "draggable"])]]]))
 
 (defn home-page []
   (fn []
