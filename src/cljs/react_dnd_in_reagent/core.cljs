@@ -7,7 +7,8 @@
    [clerk.core :as clerk]
    [accountant.core :as accountant]
    ["react-dnd" :as react-dnd :refer [DndProvider useDrag useDrop useDragLayer]]
-   ["react-dnd-html5-backend" :as react-html5-backend]))
+   ["react-dnd-html5-backend" :as react-html5-backend]
+   ["react-dnd-touch-backend" :as react-dnd-touch-backend]))
 
 ;; -------------------------
 ;; Routes
@@ -42,22 +43,44 @@
 (defn droppable-wrapper [can-drop-fn drop-fn reagent-child-fn]
   [:> 
    (fn []
-     (let [[dnd-props ref] (useDrop (clj->js {:accept :block
+     (let [collect-cache-atm (atom nil)
+           [dnd-props ref] (useDrop (clj->js {:accept :block
                                               :drop drop-fn
                                               :canDrop can-drop-fn
                                               :collect (fn [monitor]
-                                                         (let [is-over? (.isOver ^js monitor)
-                                                               can-drop? (.canDrop ^js monitor)]
-                                                           {:is-over? is-over?
-                                                            :can-drop? can-drop?}))}))]
+                                                         (if-let [cache @collect-cache-atm]
+                                                           cache
+                                                           (let [is-over? (.isOver ^js monitor)
+                                                                 can-drop? (.canDrop ^js monitor)
+                                                                 ;; item (.getItem ^js monitor)
+                                                                 ret {:is-over? is-over?
+                                                                      :can-drop? can-drop?
+                                                                      ;;:item item
+                                                                      }]
+                                                             ;;(println "Setting the cache")
+                                                             (reset! collect-cache-atm ret)
+                                                             (js/setTimeout
+                                                              (fn []
+                                                                ;;(println "clearing out the cache")
+                                                                (reset! collect-cache-atm nil))
+                                                              25) ;; clear the collect cache automatically after a set amount of time
+                                                             ret)))}))]
        (r/as-element (reagent-child-fn ref dnd-props))))])
 
 (defn block [id]
   [:div {:style {:border "1px solid" :height "50px" :margin "5px" :position :relative}}
-   [droppable-wrapper (fn [] true) (fn [] (println "drop onto: " id))
+   [droppable-wrapper
+    (fn [js-item]
+      (let [num (-> js-item (js->clj :keywordize-keys true) :id)]
+        (or (and (even? id) (even? num))
+            (and (odd?  id) (odd?  num)))))
+    (fn [] (println "drop onto: " id))
     (fn [ref dnd-props]
-      [:div {:ref ref :style {:width "100%" :height "100%" :position :absolute :background-color "yellow"}}])]
-   [draggable-wrapper {}
+      (let [{:keys [can-drop? is-over?]} (-> dnd-props (js->clj :keywordize-keys true))]
+        [:div {:ref ref
+               :style (merge {:width "100%" :height "100%" :position :absolute :background-color "yellow"}
+                             (when can-drop? {:background-color "green"}))}]))]
+   [draggable-wrapper {:id id}
     (fn [ref preview-ref dnd-props]
       [:div {:ref ref :style {:z-index 100 :padding "4px" :background-color "grey" :position :relative}} "id: " id])]])
 
@@ -65,7 +88,10 @@
   (r/with-let []
     [:div
      [:div "Welcome to react-dnd-in-reagent"]
-     [:> DndProvider {:backend react-html5-backend/HTML5Backend}
+     [:> DndProvider {:backend react-html5-backend/HTML5Backend
+                      ;; :backend react-dnd-touch-backend/TouchBackend
+                      ;; :options {:enableMouseEvents true}
+                      }
       (map (fn [x] ^{:key x} [block x]) (range 0 100))
       [droppable-wrapper (fn [] true) (fn [] (println "drop"))
        (fn [ref dnd-props]
