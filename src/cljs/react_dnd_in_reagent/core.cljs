@@ -66,7 +66,7 @@
     [:div
      [:div "Welcome to react-dnd-in-reagent"]
      [:> DndProvider {:backend react-html5-backend/HTML5Backend}
-      [block 14]
+      (map (fn [x] ^{:key x} [block x]) (range 0 100))
       [droppable-wrapper (fn [] true) (fn [] (println "drop"))
        (fn [ref dnd-props]
          [:div {:ref ref :style {:border "1px solid"}} "foo"])]
