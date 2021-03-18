@@ -48,6 +48,7 @@
                                               :drop drop-fn
                                               :canDrop can-drop-fn
                                               :collect (fn [monitor]
+                                                         ;; this debounce function was inspired by https://github.com/react-dnd/react-dnd/issues/421
                                                          (let [now (.now js/Date)
                                                                [ms cache] @collect-cache-atm]
                                                            (if (and cache
