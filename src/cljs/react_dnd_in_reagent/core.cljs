@@ -48,23 +48,20 @@
                                               :drop drop-fn
                                               :canDrop can-drop-fn
                                               :collect (fn [monitor]
-                                                         (if-let [cache @collect-cache-atm]
-                                                           cache
-                                                           (let [is-over? (.isOver ^js monitor)
-                                                                 can-drop? (.canDrop ^js monitor)
-                                                                 ;; item (.getItem ^js monitor)
-                                                                 ret {:is-over? is-over?
-                                                                      :can-drop? can-drop?
-                                                                      ;;:item item
-                                                                      }]
-                                                             ;;(println "Setting the cache")
-                                                             (reset! collect-cache-atm ret)
-                                                             (js/setTimeout
-                                                              (fn []
-                                                                ;;(println "clearing out the cache")
-                                                                (reset! collect-cache-atm nil))
-                                                              25) ;; clear the collect cache automatically after a set amount of time
-                                                             ret)))}))]
+                                                         (let [now (.now js/Date)
+                                                               [ms cache] @collect-cache-atm]
+                                                           (if (and cache
+                                                                    (< (- now ms) 50))
+                                                             cache
+                                                             (let [is-over? (.isOver ^js monitor)
+                                                                   can-drop? (.canDrop ^js monitor)
+                                                                   ;; item (.getItem ^js monitor)
+                                                                   ret {:is-over? is-over?
+                                                                        :can-drop? can-drop?
+                                                                        ;;:item item
+                                                                        }]
+                                                               (reset! collect-cache-atm [now ret])
+                                                               ret))))}))]
        (r/as-element (reagent-child-fn ref dnd-props))))])
 
 (defn block [id]
